@@ -22,6 +22,7 @@ But, please be kind!
         - [Flag Uniqueness](#flag-uniqueness)
             - [Exceptions](#exceptions)
         - [Required Flags](#required-flags)
+            - [Exceptions](#exceptions)
         - [Short Flags](#short-flags)
     - [Design Considerations](#design-considerations)
         - [Mirror Subcommands](#mirror-subcommands)
@@ -155,12 +156,14 @@ Flags should never change top-level modes (subcommands) of the program.
 Why?
 Compare these examples:
 
-- Subcommands as subcommands: `git commit` and `git diff` do different things, and have clearly established boundaries. 
+- Subcommands as subcommands: `git commit` and `git diff` do different things, and have clearly established boundaries.
   A plain invocation of `git` can list them all.
 - Flags as subcommands: `gpg --encrypt`  and `gpg --sign` do completely different things and have no established boundaries.
   All modes of `gpg` share a huge set of sometimes mutually exclusive flags.
 
-`--help` gets an exception since it's existed as a special (and importantly, *consistent*) mode across commands since the days of yore.
+#### Exceptions
+
+`--help` gets a pass since it's existed as a special (and *consistent*) mode across commands since the days of yore.
 
 ### Short Flags
 
