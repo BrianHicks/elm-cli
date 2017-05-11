@@ -109,8 +109,20 @@ It's possible to do more, but the user experience suffers.
 
 ### Subcommands
 
-If a parent subcommand has  children subcommands, the parent subcommand shouldn't do anything by default.
-If it *does* do anything, it should only ever be informational (think `GET`, not `POST`).
+Subcommands are positional arguments that namespace functionality.
+We should use them more.
+They're great!
+
+`git` is a nice example.
+`git commit` does a different thing than `git push`, and each have a unique set of flags.
+`git` becomes an entry point into a system of interrelated commands.
+It makes commands discoverable and creates a nicer experience for the user.
+`elm` does this too!
+
+As a counterexample, consider `gpg`.
+Instead of subcommands, `gpg` uses modal flags like `--encrypt` and `--decrypt`.
+That seems fine at first, but then you pass `--armor` to the wrong mode and it blows up.
+As a result, `gpg` is harder to use than it should be.
 
 ### Flag Uniqueness
 
