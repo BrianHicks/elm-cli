@@ -4,35 +4,35 @@ This document defines the semantics I expect of command line tools.
 These are the semantics I want to use in any Elm command line tools.
 
 It's called `FIGHTME.md` because these are assumptions that I'm using, and want challenged.
-But, please be kind!
+But please be kind!
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-generate-toc again -->
 **Table of Contents**
 
 - [CLI Semantics Manifesto](#cli-semantics-manifesto)
     - [API Semantics](#api-semantics)
-        - [Getting Help](#getting-help)
+        - [`--help` Always Changes The Global Mode](#--help-always-changes-the-global-mode)
             - [Ideas](#ideas)
-        - [Flag and Argument Position](#flag-and-argument-position)
-            - [Examples](#examples)
+        - [Flags Can Go Anywhere in a Command](#flags-can-go-anywhere-in-a-command)
             - [Exceptions](#exceptions)
-        - [Argument Uniqueness](#argument-uniqueness)
+        - [Flags Can Only be Present Once Per Invocation](#flags-can-only-be-present-once-per-invocation)
             - [Exceptions](#exceptions)
-        - [Subcommands](#subcommands)
-        - [Flag Uniqueness](#flag-uniqueness)
+        - [Flags Are Never Required](#flags-are-never-required)
             - [Exceptions](#exceptions)
-        - [Required Flags](#required-flags)
+        - [Arguments are Positional and Unique](#arguments-are-positional-and-unique)
             - [Exceptions](#exceptions)
-        - [Short Flags](#short-flags)
+        - [Subcommands: Yes Please](#subcommands-yes-please)
+        - [We Don't Have Short Flags](#we-dont-have-short-flags)
+            - [Possible Exceptions](#possible-exceptions)
     - [Design Considerations](#design-considerations)
-        - [Mirror Subcommands](#mirror-subcommands)
-        - [Responsibilities of a Parent or Root Subcommand](#responsibilities-of-a-parent-or-root-subcommand)
+        - [Mirror Subcommands Should Be Intuitive Opposites](#mirror-subcommands-should-be-intuitive-opposites)
+        - [Parent Subcommands Have Responsibilities For Their Children](#parent-subcommands-have-responsibilities-for-their-children)
 
 <!-- markdown-toc end -->
 
 ## API Semantics
 
-### Getting Help
+### `--help` Always Changes The Global Mode
 
 Every command and subcommand has a `--help` flag that takes precedence over all other flags.
 It prints the usage for the command or subcommand that *would* have been invoked and exits with a non-zero error code.
@@ -51,18 +51,14 @@ If a subcommand or flag is used incorrectly, the program could say *what* was wr
 
 If a subcommand or flag was spelled wrong, the program could suggest corrections and exit with a non-zero error code.
 
-### Flag and Argument Position
+### Flags Can Go Anywhere in a Command
 
-Args should be positional, flags should not.
-Both should be unique, unless otherwise specified.
-
+It doesn't matter where you put flags in a command.
 The following invocations are all valid and result in the same thing:
 
 - `converge --log-level=debug apply file.hcl`
 - `converge apply --log-level=debug file.hcl`
 - `converge apply file.hcl --log-level=debug`
-
-#### Examples
 
 This matters because of two main cases:
 
@@ -80,16 +76,56 @@ I most often do this with `kubectl`: `alias ksystem="kubectl --namespace=kube-sy
 
 #### Exceptions
 
-It's reasonably common to accept `--` as an argument, after which no flag or argument parsing takes place.
+It's not unheard of to accept `--` as an argument, after which no flag or argument parsing takes place.
 
-Take, for example, `kubectl run test --image=ubuntu -- curl -I some.other.service`.
+Take, for example, `kubectl run test --image=ubuntu -- curl -X DELETE some.other.service`.
 This only interprets `--image` as part of the command.
 Everything after `--` is used as a raw command for the container.
 
-### Argument Uniqueness
+### Flags Can Only be Present Once Per Invocation
 
-Arguments should be positional and unique by default.
-If an argument is repeated (like a number of files to process), it must be the last argument, and the only repeated argument.
+Providing multiple values for the same flag should cause an error.
+Otherwise we create ambiguity.
+
+Which method is used in `curl --method POST --method GET httpbin.org/get`?
+Is it the first specified or the last?
+And while it's easy to see there's a conflict *here*, what if the two `--method`s are separated by other flags?
+It's easy to get weird behavior, from the user's perspective.
+
+#### Exceptions
+
+Sometimes flags need to repeat to build up a value.
+For example, Docker sets environment variables in containers with repeated use of `-e` or `--environment`, like so:
+
+```
+docker run --rm -e X=1 -e Y=2 busybox env
+```
+
+This sets the environment variables `X` and `Y`, and is a totally normal invocation of `docker`.
+
+### Flags Are Never Required
+
+Flags should not be required.
+They don't act like subcommands, and they always have a reasonable default value to reduce typing for common operations.
+
+Flags should never change top-level modes (subcommands) of the program.
+Why?
+Compare these examples:
+
+- Subcommands as subcommands: `git commit` and `git diff` do different things, and have clearly established boundaries.
+  A plain invocation of `git` can list them all.
+- Flags as subcommands: `gpg --encrypt`  and `gpg --sign` do completely different things and have no established boundaries.
+  All modes of `gpg` share a huge set of sometimes mutually exclusive flags.
+
+#### Exceptions
+
+`--help` gets a pass since it's existed as a special (and *consistent*) mode across commands since the days of yore.
+
+### Arguments are Positional and Unique
+
+Arguments are positional in that `mv a b` and `mv b a` create different invocations.
+They are unique by default in that only one value goes in each argument.
+
 This is mostly uncontroversial, but why?
 
 First, positional arguments enable subcommands.
@@ -109,7 +145,7 @@ In these cases, only one *kind* of argument is repeated (source files in both ca
 Typically, only one argument is repeated.
 It's possible to do more, but the user experience suffers.
 
-### Subcommands
+### Subcommands: Yes Please
 
 Subcommands are positional arguments that namespace functionality.
 We should use them more.
@@ -126,71 +162,33 @@ Instead of subcommands, `gpg` uses modal flags like `--encrypt` and `--decrypt`.
 That seems fine at first, but then you pass `--armor` to the wrong mode and it blows up.
 As a result, `gpg` is harder to use than it should be.
 
-### Flag Uniqueness
+### We Don't Have Short Flags
 
-Flags should be unique by default.
-Providing multiple values for the same flag should cause an error, since they're ambiguous.
-
-Which method is used in `curl --method POST --method GET httpbin.org/get`?
-Is it the first specified or the last?
-And while it's easy to see there's a conflict *here*, what if the two `--method`s are separated by other flags?
-It's easy to get weird behavior, from the user's perspective.
-
-#### Exceptions
-
-Sometimes flags need to repeat to build up a value.
-For example, Docker sets environment variables in containers with repeated use of `-e` or `--environment`, like so:
-
-```
-docker run --rm -e X=1 -e Y=2 busybox env
-```
-
-This sets the environment variables `X` and `Y`, and is a totally normal invocation of `docker`.
-
-### Required Flags
-
-Flags should not be required.
-They don't act like subcommands, and they always have a reasonable default value to reduce typing for common operations.
-
-Flags should never change top-level modes (subcommands) of the program.
-Why?
-Compare these examples:
-
-- Subcommands as subcommands: `git commit` and `git diff` do different things, and have clearly established boundaries.
-  A plain invocation of `git` can list them all.
-- Flags as subcommands: `gpg --encrypt`  and `gpg --sign` do completely different things and have no established boundaries.
-  All modes of `gpg` share a huge set of sometimes mutually exclusive flags.
-
-#### Exceptions
-
-`--help` gets a pass since it's existed as a special (and *consistent*) mode across commands since the days of yore.
-
-### Short Flags
-
-We don't have short flags.
 Quick, tell me what `curl -kLI https://localhost:8043` is doing!
 
 ![relevant xkcd](https://imgs.xkcd.com/comics/tar.png)
 
-There *are* a few places where short flags make sense:
-
-- `-y` for `--yes` or `--assume-yes`, as seen in `apt-get install`
-- `-h` for `--help` almost everywhere, except when it means `--host` or `--header`.
-- `-v` for verbose output, but it's inconsistent: `-vvvv` vs `-v=4` vs `--log-level=debug` (which is the best, IMO.)
-
-In short, where we can be consistent, we should be consistent.
-Where we can't be consistent, we should be explicit.
-Short flags don't help out a lot here.
+To sum up, where we can be consistent, we should be consistent.
+Where we can't be consistent, we should at least be explicit.
+Short flags don't help out a lot with either of those goals.
 
 *Note*: I'm the least sure about this assertion, even though it's the strongest worded.
 If you have a link to a paper or study about command-line usability with regards to short flags, please send me a link.
 I can find opinions on my own, thanks.
 
+#### Possible Exceptions
+
+There *are* a few places where short flags make sense:
+
+- `-y` for `--yes` or `--assume-yes`, as seen in `apt-get install`
+- `-h` for `--help` almost everywhere, except when it means `--host` or `--header`.
+- `-v` for verbose output, but it's inconsistent: `-vvvv` vs `-v=4` (although `--log-level=debug` makes more sense here.)
+
 ## Design Considerations
 
 These are things that we can't really enforce using the API, but we can encourage by documenting well.
 
-### Mirror Subcommands
+### Mirror Subcommands Should Be Intuitive Opposites
 
 If two subcommands mirror each other, they should be intuitive opposites.
 If there are two otherwise equally good opposites, the best tends to have the smallest edit distance (at least in English.)
@@ -202,7 +200,7 @@ For example:
 - `encode` vs `decode`
 - `push` vs `pull`
 
-### Responsibilities of a Parent or Root Subcommand
+### Parent Subcommands Have Responsibilities For Their Children
 
 If a parent subcommand has children, the parent has a few options.
 
