@@ -17,6 +17,7 @@ But, please be kind!
             - [Examples](#examples)
             - [Exceptions](#exceptions)
         - [Argument Uniqueness](#argument-uniqueness)
+            - [Exceptions](#exceptions)
         - [Subcommands](#subcommands)
         - [Flag Uniqueness](#flag-uniqueness)
         - [Required Flags](#required-flags)
@@ -96,6 +97,15 @@ First, positional arguments enable subcommands.
 Second, aside from position arguments have no meaning.
 If you ignore the position of the arguments to `mv` or `ln`, you have no idea which is the source and which is the destination.
 (Other usability issues here aside&hellip; source/destination confusion is really common.)
+
+#### Exceptions
+
+Sometimes an argument can repeat.
+For example, you can run `mv a b x/` to move files `a` and `b` into directory `x`.
+Or you can `cat a b` to concatenate them together.
+In these cases, only one *kind* of argument is repeated (source files in both cases.)
+Typically, only one argument is repeated.
+It's possible to do more, but the user experience suffers.
 
 ### Subcommands
 
