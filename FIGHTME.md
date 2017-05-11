@@ -85,8 +85,16 @@ Everything after `--` is used as a raw command for the container.
 ### Argument Uniqueness
 
 Arguments should be positional and unique by default.
-
 If an argument is repeated (like a number of files to process), it must be the last argument, and the only repeated argument.
+This is mostly uncontroversial, but why?
+
+First, positional arguments enable subcommands.
+`kubectl get pods` makes intuitive sense if you've done anything on the command line.
+`kubectl pods get` doesn't work nearly as well.
+
+Second, aside from position arguments have no meaning.
+If you ignore the position of the arguments to `mv` or `ln`, you have no idea which is the source and which is the destination.
+(Other usability issues here aside&hellip; source/destination confusion is really common.)
 
 ### Subcommands
 
