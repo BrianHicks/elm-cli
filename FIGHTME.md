@@ -14,6 +14,8 @@ But, please be kind!
         - [Getting Help](#getting-help)
             - [Ideas](#ideas)
         - [Flag and Argument Position](#flag-and-argument-position)
+            - [Examples](#examples)
+            - [Exceptions](#exceptions)
         - [Argument Uniqueness](#argument-uniqueness)
         - [Subcommands](#subcommands)
         - [Flag Uniqueness](#flag-uniqueness)
@@ -56,6 +58,8 @@ The following invocations are all valid and result in the same thing:
 - `converge apply --log-level=debug file.hcl`
 - `converge apply file.hcl --log-level=debug`
 
+#### Examples
+
 This matters because of two main cases:
 
 When you're composing a command line string you often just want to tack options onto the end.
@@ -69,6 +73,14 @@ I often find myself doing this with `curl`:
 Second, when you're creating an alias you almost always want to have all your options at the beginning.
 If flags are not positional, you can create a wrapper for whatever configuration you like.
 I most often do this with `kubectl`: `alias ksystem="kubectl --namespace=kube-system"`.
+
+#### Exceptions
+
+It's reasonably common to accept `--` as an argument, after which no flag or argument parsing takes place.
+
+Take, for example, `kubectl run test --image=ubuntu -- curl -I some.other.service`.
+This only interprets `--image` as part of the command.
+Everything after `--` is used as a raw command for the container.
 
 ### Argument Uniqueness
 
