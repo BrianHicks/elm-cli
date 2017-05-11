@@ -20,6 +20,7 @@ But, please be kind!
             - [Exceptions](#exceptions)
         - [Subcommands](#subcommands)
         - [Flag Uniqueness](#flag-uniqueness)
+            - [Exceptions](#exceptions)
         - [Required Flags](#required-flags)
         - [Short Flags](#short-flags)
     - [Design Considerations](#design-considerations)
@@ -127,15 +128,23 @@ As a result, `gpg` is harder to use than it should be.
 ### Flag Uniqueness
 
 Flags should be unique by default.
+Providing multiple values for the same flag should cause an error, since they're ambiguous.
 
-In our example, providing `--log-level` twice is an error.
-This is the most common case and should be the default.
-But this should be configurable.
+Which method is used in `curl --method POST --method GET httpbin.org/get`?
+Is it the first specified or the last?
+And while it's easy to see there's a conflict *here*, what if the two `--method`s are separated by other flags?
+It's easy to get weird behavior, from the user's perspective.
+
+#### Exceptions
+
+Sometimes flags need to repeat to build up a value.
 For example, Docker sets environment variables in containers with repeated use of `-e` or `--environment`, like so:
 
 ```
 docker run --rm -e X=1 -e Y=2 busybox env
 ```
+
+This sets the environment variables `X` and `Y`, and is a totally normal invocation of `docker`.
 
 ### Required Flags
 
