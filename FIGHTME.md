@@ -23,6 +23,7 @@ But, please be kind!
         - [Short Flags](#short-flags)
     - [Design Considerations](#design-considerations)
         - [Mirror Subcommands](#mirror-subcommands)
+        - [Responsibilities of a Parent or Root Subcommand](#responsibilities-of-a-parent-or-root-subcommand)
 
 <!-- markdown-toc end -->
 
@@ -166,3 +167,17 @@ For example:
 - `install` vs `uninstall` (*not* `remove`, but aliases should be possible.)
 - `encode` vs `decode`
 - `push` vs `pull`
+
+### Responsibilities of a Parent or Root Subcommand
+
+If a parent subcommand has children, the parent has a few options.
+
+First, it could execute query to provide information to the user.
+Think `git status` here, but also `heroku ps`.
+
+Second, it could provide an informational display on how to use the children.
+See the default behavior of `git` here: it lists the most common subcommands and exits.
+
+Third, it could provide a nicer thing than either of those.
+This tool should enable creating pleasant user experience, so the programmer has the option of what to do.
+For example, if you run `git` it could ask you if you want to initialize a repository in the current directory.
