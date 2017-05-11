@@ -165,3 +165,4 @@ For example:
 - `encrypt` vs `decrypt`
 - `install` vs `uninstall` (*not* `remove`, but aliases should be possible.)
 - `encode` vs `decode`
+- `push` vs `pull`
