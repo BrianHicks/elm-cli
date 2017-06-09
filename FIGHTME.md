@@ -213,3 +213,10 @@ See the default behavior of `git` here: it lists the most common subcommands and
 Third, it could provide a nicer thing than either of those.
 This tool should enable creating pleasant user experience, so the programmer has the option of what to do.
 For example, if you run `git` it could ask you if you want to initialize a repository in the current directory.
+
+### Arguments That Imply Order Should Move From Left to Right
+
+Arguments should use `command from to` for data that flows in a direction.
+Think of `mv from to` or `cp from to`.
+
+Likewise, commands that are creating a resource should be in the form of `command create-from to-create`.
