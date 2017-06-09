@@ -23,10 +23,13 @@ But please be kind!
             - [Exceptions](#exceptions)
         - [Subcommands: Yes Please](#subcommands-yes-please)
         - [We Don't Have Short Flags](#we-dont-have-short-flags)
+        - [File Arguments or Flags take `-` for Console I/O](#file-arguments-or-flags-take---for-console-io)
             - [Possible Exceptions](#possible-exceptions)
     - [Design Considerations](#design-considerations)
         - [Mirror Subcommands Should Be Intuitive Opposites](#mirror-subcommands-should-be-intuitive-opposites)
         - [Parent Subcommands Have Responsibilities For Their Children](#parent-subcommands-have-responsibilities-for-their-children)
+        - [Arguments That Imply Order Should Move From Left to Right](#arguments-that-imply-order-should-move-from-left-to-right)
+        - [Output Should Be Appropriate for the Reader](#output-should-be-appropriate-for-the-reader)
 
 <!-- markdown-toc end -->
 
@@ -176,6 +179,12 @@ Short flags don't help out a lot with either of those goals.
 If you have a link to a paper or study about command-line usability with regards to short flags, please send me a link.
 I can find opinions on my own, thanks.
 
+### File Arguments or Flags take `-` for Console I/O
+
+Commands reading from files should accept `-` to indicate that they should read from `stdin` instead of disk.
+
+Commands writing to files should accept `-` to indicate that they should write to `stdout` instead of disk.
+
 #### Possible Exceptions
 
 There *are* a few places where short flags make sense:
@@ -220,3 +229,8 @@ Arguments should use `command from to` for data that flows in a direction.
 Think of `mv from to` or `cp from to`.
 
 Likewise, commands that are creating a resource should be in the form of `command create-from to-create`.
+
+### Output Should Be Appropriate for the Reader
+
+When writing to `stdout` commands should detect whether or not it is a terminal before using control sequences.
+Output should be formatted for human readability when writing for a terminal, and machine readability when writing to a file.
