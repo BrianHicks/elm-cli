@@ -81,9 +81,9 @@ value =
             |= (keep oneOrMore (always True))
 
 
-element : Parser Element
-element =
-    inContext "command element" <| oneOf [ option, value ]
+element : Int -> Parser Element
+element n =
+    inContext ("command element " ++ toString n) <| oneOf [ option, value ]
 
 
 {-| parse applies our parsing logic to a list of raw argv.
@@ -105,8 +105,9 @@ Valid characters in option names:
 -}
 parse : List String -> Result Error (List Element)
 parse =
-    List.foldr
-        (\new elements ->
-            Result.map2 (::) (run element new) elements
-        )
-        (Ok [])
+    List.indexedMap (\i el -> ( i + 1, el ))
+        >> List.foldr
+            (\( n, new ) elements ->
+                Result.map2 (::) (run (element n) new) elements
+            )
+            (Ok [])
