@@ -1,4 +1,4 @@
-module Argv exposing (Invocation, Error, parse)
+module Argv exposing (Invocation, Element(..), Error, parse)
 
 {-| Argv lets you turn a list of unknown argument strings into a list of elements.
 
@@ -9,12 +9,11 @@ This is intended to be fairly low-level, so it really just parses options and
 returns strings for everything. If you need more advanced behavior you'll want
 to write your own option processor on top of this.
 
-@docs Invocation, Error, parse
+@docs Invocation, Error, Element, parse
 
 -}
 
 import Char
-import Dict exposing (Dict)
 import Parser exposing (..)
 
 
@@ -32,8 +31,7 @@ was present (outer `Maybe`) but not set (inner `Maybe`).
 -}
 type alias Invocation =
     { program : String
-    , arguments : List String
-    , options : Dict String (Maybe String)
+    , arguments : List Element
     }
 
 
@@ -146,24 +144,12 @@ parse =
             )
             (Ok [])
         >> Result.mapError ParserError
-        >> Result.map
-            (List.foldr
-                (\el ( options, arguments ) ->
-                    case el of
-                        Option name value ->
-                            ( Dict.insert name value options, arguments )
-
-                        Argument value ->
-                            ( options, value :: arguments )
-                )
-                ( Dict.empty, [] )
-            )
         >> Result.andThen
-            (\( options, arguments ) ->
-                case arguments of
-                    binary :: args ->
-                        Ok <| Invocation binary args options
+            (\elements ->
+                case elements of
+                    (Argument program) :: rest ->
+                        Ok <| Invocation program rest
 
-                    [] ->
+                    _ ->
                         Err MissingBinaryName
             )
